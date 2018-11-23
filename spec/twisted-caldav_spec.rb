@@ -19,7 +19,7 @@ describe TwistedCaldav::Client do
   end
 
   it "check Class of client" do
-    @c.class.to_s.should == "TwistedCaldav::Client"
+    expect(@c.class).to eq(TwistedCaldav::Client)
   end
 
 end
