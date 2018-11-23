@@ -144,12 +144,12 @@ module TwistedCaldav
     def create_event event
       c = Calendar.new
       c.events = []
-      uuid = UUID.new.generate
+      uuid = (event[:uid] ? event[:uid] : UUID.new.generate)
       raise DuplicateError if entry_with_uuid_exists?(uuid)
       c.event do
-        uid           uuid 
-        dtstart       DateTime.parse(event[:start])
-        dtend         DateTime.parse(event[:end])
+        uid           uuid
+        dtstart       (event[:fullday] ? Date.parse(event[:start]) : DateTime.parse(event[:start]))
+        dtend         (event[:fullday] ? Date.parse(event[:end])+1 : DateTime.parse(event[:end]))
         categories    event[:categories]# Array
         contacts      event[:contacts] # Array
         attendees     event[:attendees]# Array
@@ -170,9 +170,9 @@ module TwistedCaldav
         req = Net::HTTP::Put.new("#{@url}/#{uuid}.ics")
         req['Content-Type'] = 'text/calendar'
         if not @authtype == 'digest'
-        	req.basic_auth @user, @password
+          req.basic_auth @user, @password
         else
-        	req.add_field 'Authorization', digestauth('PUT')
+          req.add_field 'Authorization', digestauth('PUT')
         end
         req.body = cstring
         res = http.request( req )
