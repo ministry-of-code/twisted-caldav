@@ -63,29 +63,29 @@ module TwistedCaldav
       events = []
       res = nil
       __create_http.start {|http|
-      	
-        req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml'} )
-        
+
+        req = Net::HTTP::Report.new(@url, initheader = {'Content-Type'=>'application/xml', 'Depth'=>'1'} )
+
 		if not @authtype == 'digest'
 			req.basic_auth @user, @password
 		else
 			req.add_field 'Authorization', digestauth('REPORT')
 		end
 		    if data[:start].is_a? Integer
-          req.body = TwistedCaldav::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"), 
+          req.body = TwistedCaldav::Request::ReportVEVENT.new(Time.at(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.at(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         else
-          req.body = TwistedCaldav::Request::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"), 
+          req.body = TwistedCaldav::Request::ReportVEVENT.new(Time.parse(data[:start]).utc.strftime("%Y%m%dT%H%M%S"),
                                                         Time.parse(data[:end]).utc.strftime("%Y%m%dT%H%M%S") ).to_xml
         end
         res = http.request(req)
-      } 
+      }
         errorhandling res
         result = ""
         #puts res.body
         xml = REXML::Document.new(res.body)
-        REXML::XPath.each( xml, '//c:calendar-data/', {"c"=>"urn:ietf:params:xml:ns:caldav"} ){|c| result << c.text}
-        r = Icalendar.parse(result)      
+        REXML::XPath.each( xml, '//c:calendar-data/', {"c"=>"urn:ietf:params:xml:ns:caldav"} ){|c| result << "#{c.text}\n" }
+        r = Icalendar.parse(result)
         unless r.empty?
           r.each do |calendar|
             calendar.events.each do |event|
