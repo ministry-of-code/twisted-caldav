@@ -168,11 +168,15 @@ module TwistedCaldav
       http = Net::HTTP.new(@host, @port)
       __create_http.start { |http|
         req = Net::HTTP::Put.new("#{@url}/#{uuid}.ics")
-        req['Content-Type'] = 'text/calendar'
+        req['Content-Type'] = 'text/calendar; charset=utf-8'
         if not @authtype == 'digest'
           req.basic_auth @user, @password
         else
           req.add_field 'Authorization', digestauth('PUT')
+        end
+        if event[:fullday]
+          cstring.gsub!(/DTSTART:(\d+)/,"DTSTART;VALUE=DATE:\\1")
+          cstring.gsub!(/DTEND:(\d+)/,"DTEND;VALUE=DATE:\\1")
         end
         req.body = cstring
         res = http.request( req )
